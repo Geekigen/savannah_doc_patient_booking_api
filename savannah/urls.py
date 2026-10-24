@@ -17,7 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from savannah.home import home, postman_collection
+
 urlpatterns = [
+    path('', home, name='home'),
+    path('postman/', postman_collection, name='postman-collection'),
     path('admin/', admin.site.urls),
     path('', include('api.urls')),
 ]
