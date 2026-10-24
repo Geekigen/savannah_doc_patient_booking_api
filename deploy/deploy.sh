@@ -47,8 +47,14 @@ python manage.py collectstatic --noinput
 
 echo "==> Restarting savannah"
 if systemctl cat savannah.service &>/dev/null; then
+    # Only exact commands allowed in /etc/sudoers.d/savannah-deploy (no extra flags).
     sudo systemctl restart savannah
-    sudo systemctl is-active --quiet savannah
+    # is-active does not need sudo; do not pass flags through sudo.
+    if ! systemctl is-active --quiet savannah; then
+        echo "ERROR: savannah.service is not active after restart" >&2
+        systemctl status savannah --no-pager >&2 || true
+        exit 1
+    fi
 else
     echo "WARNING: savannah.service not found." >&2
 fi

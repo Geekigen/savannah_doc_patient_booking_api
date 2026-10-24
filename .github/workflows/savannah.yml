@@ -1,4 +1,4 @@
-# Deploy savannah to VPS on push to deploy (git pull on server, no rsync).
+# Test + deploy savannah on push to deploy (git pull on server, no rsync).
 #
 # Required GitHub repository secrets:
 #   SSH_HOST          - VPS IP (13.140.169.79)
@@ -21,7 +21,61 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: savannah
+          POSTGRES_USER: savannah
+          POSTGRES_PASSWORD: change-me
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U savannah -d savannah"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          {
+            echo 'DJANGO_SECRET_KEY=ci-test-secret-not-for-production'
+            echo 'DEBUG=1'
+            echo 'ALLOWED_HOSTS=localhost,127.0.0.1'
+            echo 'POSTGRES_DB=savannah'
+            echo 'POSTGRES_USER=savannah'
+            echo 'POSTGRES_PASSWORD=change-me'
+            echo 'POSTGRES_HOST=127.0.0.1'
+            echo 'POSTGRES_PORT=5432'
+            echo 'DOCTOR_PASSWORD=ci-doctor-pass'
+            echo 'PATIENT_PASSWORD=ci-patient-pass'
+          } > .env
+
+      - name: Migrate
+        run: python manage.py migrate --noinput
+
+      - name: Run tests
+        run: python manage.py test -v 2
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH (git pull on server)
