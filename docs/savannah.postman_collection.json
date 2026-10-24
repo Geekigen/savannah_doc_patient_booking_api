@@ -1,0 +1,317 @@
+{
+  "info": {
+    "name": "Savannah Clinic Booking Project",
+    "_postman_id": "b7e1c4a2-6f3d-4a91-9c2e-8d5f0a1b3c47",
+    "description": "Clinic booking API with DRF Token auth.\n\n1. Call Login details is shared in the recruiters email. The test script stores `token`.\n2. Call List doctors and List patients. Their test scripts store `doctor_id` and `patient_id`.\n3. Use the booking routes. Every protected request sends `Authorization: Token {{token}}`.\n\nWorking hours are 08:00–15:00 in Africa/Nairobi, in 30-minute slots (last start is 14:30). A booking must start at least one hour from now, must not be in the past, and must not already be taken.\n\n`date` is set to two days ahead on each run. Booking stores `appointment_id` for cancel and reschedule.\n\nSuccess responses are HTTP 200. Errors use `status`, `error`, and `message` only.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "Token {{token}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "Authorization",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const day = new Date();",
+          "day.setDate(day.getDate() + 2);",
+          "const month = String(day.getMonth() + 1).padStart(2, '0');",
+          "const date = String(day.getDate()).padStart(2, '0');",
+          "pm.collectionVariables.set('date', day.getFullYear() + '-' + month + '-' + date);"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "doctor_id",
+      "value": ""
+    },
+    {
+      "key": "patient_id",
+      "value": ""
+    },
+    {
+      "key": "appointment_id",
+      "value": ""
+    },
+    {
+      "key": "date",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin254@sav\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Public login for the seeded super admin. Returns a DRF token used by every other request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.token) {",
+                  "    pm.collectionVariables.set('token', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "List doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/doctors",
+              "host": ["{{base_url}}"],
+              "path": ["doctors"]
+            },
+            "description": "Lists the five seeded doctors. Stores the first doctor id as doctor_id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.doctors && body.doctors.length) {",
+                  "    pm.collectionVariables.set('doctor_id', body.doctors[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Available slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/doctors/{{doctor_id}}/availability?date={{date}}",
+              "host": ["{{base_url}}"],
+              "path": ["doctors", "{{doctor_id}}", "availability"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{date}}",
+                  "description": "Clinic day, YYYY-MM-DD."
+                }
+              ]
+            },
+            "description": "Returns 30-minute slots that are still free for this doctor on this date."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "List patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": ["{{base_url}}"],
+              "path": ["patients"]
+            },
+            "description": "Lists the four seeded patients. Stores the first patient id as patient_id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.patients && body.patients.length) {",
+                  "    pm.collectionVariables.set('patient_id', body.patients[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Upcoming appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/patients/{{patient_id}}/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["patients", "{{patient_id}}", "appointments"]
+            },
+            "description": "Upcoming visits that are not cancelled, sorted by date then start time."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Book a slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": \"{{patient_id}}\",\n  \"doctor_id\": \"{{doctor_id}}\",\n  \"date\": \"{{date}}\",\n  \"start_time\": \"10:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["appointments"]
+            },
+            "description": "Books one 30-minute slot. Returns 200 with the appointment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.id) {",
+                  "    pm.collectionVariables.set('appointment_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Cancel an appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Patient requested a different day\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "{{appointment_id}}", "cancel"]
+            },
+            "description": "Cancels the appointment and frees that date and time. reason is required."
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule an appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{date}}\",\n  \"start_time\": \"11:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/{{appointment_id}}/reschedule",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "{{appointment_id}}", "reschedule"]
+            },
+            "description": "Moves the appointment onto a new slot. The previous slot becomes free."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
