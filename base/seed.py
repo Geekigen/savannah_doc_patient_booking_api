@@ -8,8 +8,8 @@ from rest_framework.authtoken.models import Token
 from base.backend.services import DoctorService, PatientService
 from base.models import Doctor, Patient
 
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'admin254@sav'
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
 DOCTOR_PASSWORD = os.environ['DOCTOR_PASSWORD']
 PATIENT_PASSWORD = os.environ['PATIENT_PASSWORD']
 

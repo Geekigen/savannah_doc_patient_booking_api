@@ -43,10 +43,14 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://127.0.0.1:8000"
+      "value": "https://kigendemo.online"
     },
     {
       "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_password",
       "value": ""
     },
     {
@@ -85,7 +89,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin254@sav\"\n}"
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"{{admin_password}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/login",
