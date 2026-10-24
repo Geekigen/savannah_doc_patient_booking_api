@@ -21,9 +21,12 @@ if [[ ! -d .git ]]; then
 fi
 
 echo "==> Updating code from origin/${BRANCH}"
+# Deploy checkout must match origin exactly. Local edits (e.g. emergency sed)
+# would block git pull; .env stays safe because it is gitignored.
 git fetch origin
 git checkout "$BRANCH"
-git pull --ff-only "origin" "$BRANCH"
+git reset --hard "origin/${BRANCH}"
+git clean -fd --exclude=.env --exclude=.venv --exclude=staticfiles --exclude=media
 
 if [[ ! -d .venv ]]; then
     echo "==> Creating virtualenv"
