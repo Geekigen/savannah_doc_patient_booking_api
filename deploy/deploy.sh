@@ -50,7 +50,7 @@ if systemctl cat savannah.service &>/dev/null; then
     sudo systemctl restart savannah
     sudo systemctl is-active --quiet savannah
 else
-    echo "WARNING: savannah.service not found. Install the unit from myservers." >&2
+    echo "WARNING: savannah.service not found." >&2
 fi
 
 sudo systemctl reload nginx 2>/dev/null || true
