@@ -46,8 +46,9 @@ echo "==> Collecting static files"
 python manage.py collectstatic --noinput
 
 echo "==> Restarting savannah"
-if systemctl list-unit-files | grep -q '^savannah\.service'; then
+if systemctl cat savannah.service &>/dev/null; then
     sudo systemctl restart savannah
+    sudo systemctl is-active --quiet savannah
 else
     echo "WARNING: savannah.service not found. Install the unit from myservers." >&2
 fi
