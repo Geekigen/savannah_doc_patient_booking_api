@@ -90,5 +90,5 @@ jobs:
             export APP_PATH="${{ secrets.SSH_PATH }}"
             export DEPLOY_BRANCH=deploy
             cd "${{ secrets.SSH_PATH }}"
-            chmod +x deploy/deploy.sh
+            # No chmod: bash does not need +x, and root-owned files break chmod for deploy.
             bash deploy/deploy.sh
