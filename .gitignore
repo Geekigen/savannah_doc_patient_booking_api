@@ -1,2 +1,9 @@
 .venv
 .env
+__pycache__/
+*.py[cod]
+.idea/
+deploy/github-deploy-key
+deploy/github-deploy-key.pub
+staticfiles/
+media/

@@ -1,0 +1,40 @@
+# Deploy savannah to VPS on push to deploy (git pull on server, no rsync).
+#
+# Required GitHub repository secrets:
+#   SSH_HOST          - VPS IP (13.140.169.79)
+#   SSH_USER          - SSH user (deploy)
+#   SSH_PRIVATE_KEY   - Private SSH key (matching public key on VPS)
+#   SSH_PATH          - App directory (/var/www/savannah)
+#
+# Optional secrets:
+#   SSH_PORT          - SSH port (default: 22)
+
+name: savannah
+
+on:
+  push:
+    branches: [deploy]
+  workflow_dispatch:
+
+concurrency:
+  group: savannah-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH (git pull on server)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            export APP_PATH="${{ secrets.SSH_PATH }}"
+            export DEPLOY_BRANCH=deploy
+            cd "${{ secrets.SSH_PATH }}"
+            chmod +x deploy/deploy.sh
+            bash deploy/deploy.sh
