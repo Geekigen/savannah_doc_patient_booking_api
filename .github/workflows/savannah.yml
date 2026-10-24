@@ -64,6 +64,8 @@ jobs:
             echo 'POSTGRES_PASSWORD=change-me'
             echo 'POSTGRES_HOST=127.0.0.1'
             echo 'POSTGRES_PORT=5432'
+            echo 'ADMIN_USERNAME=admin'
+            echo 'ADMIN_PASSWORD=ci-admin-pass'
             echo 'DOCTOR_PASSWORD=ci-doctor-pass'
             echo 'PATIENT_PASSWORD=ci-patient-pass'
           } > .env
